@@ -13,3 +13,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Project management with uv.
 - Build setup with nuitka.
+- Automatic platform native build scripts.
