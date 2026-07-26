@@ -34,7 +34,7 @@ jobs:
           enable-cache: true
 
       - name: Lint
-        run: uv run --locked --group dev ruff check .
+        run: uv run --locked --group dev python scripts/ci.py lint
 
   prepare-build:
     name: Prepare build
@@ -60,31 +60,13 @@ jobs:
       - name: Record build commit
         id: build-ref
         shell: bash
-        run: echo "ref=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+        run: uv run --locked python scripts/ci.py build-ref >> "$GITHUB_OUTPUT"
 
       - name: Verify release tag matches the application version
         if: github.event_name == 'push'
-        env:
-          TAG_NAME: ${{ github.ref_name }}
-        shell: bash
-        run: |
-          case "$TAG_NAME" in
-            v*) ;;
-            *) echo "Release tags must start with v (for example, v0.1.0)." >&2; exit 1 ;;
-          esac
-
-          version="$(uv run oledhero --version)"
-          test "$TAG_NAME" = "v$version"
-
-      - name: Verify release tag points to main
-        if: github.event_name == 'push'
-        env:
-          TAG_NAME: ${{ github.ref_name }}
-        shell: bash
-        run: |
-          tag_commit="$(git rev-parse "$TAG_NAME^{commit}")"
-          main_commit="$(git rev-parse origin/main)"
-          test "$tag_commit" = "$main_commit"
+        run: >
+          uv run --locked python scripts/ci.py verify-release
+          --tag "${{ github.ref_name }}"
 
   build-windows:
     needs: prepare-build
@@ -104,6 +86,9 @@ jobs:
 
       - name: Build executables and installer
         run: uv run --locked python scripts/build.py
+
+      - name: Verify Windows artifacts
+        run: uv run --locked python scripts/ci.py verify-artifacts
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v7
@@ -136,6 +121,9 @@ jobs:
 
       - name: Build Linux artifacts
         run: uv run --locked python scripts/build.py
+
+      - name: Verify Linux artifacts
+        run: uv run --locked python scripts/ci.py verify-artifacts
 
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v7
@@ -171,14 +159,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG_NAME: ${{ github.ref_name }}
-        shell: bash
-        run: |
-          shopt -s nullglob
-          assets=(release-assets/OledHero-*)
-          test "${#assets[@]}" -gt 0
-
-          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
-            gh release upload "$TAG_NAME" "${assets[@]}" --clobber
-          else
-            gh release create "$TAG_NAME" "${assets[@]}" --title "$TAG_NAME" --generate-notes
-          fi
+        run: >
+          uv run --locked python scripts/ci.py publish-release
+          --tag "$TAG_NAME" --assets-dir release-assets
