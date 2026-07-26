@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<svg xmlns="http://www.w3.org/2000/svg"
+  width="1254"
+  height="1254"
+  viewBox="105.5 101 1045 1045"
+  preserveAspectRatio="xMidYMid meet"
+  role="img"
+  aria-labelledby="title desc">
+
+  <title id="title">OledHero shield icon</title>
+  <desc id="desc">
+    A blue-green shield surrounding red, green, and blue OLED subpixel bars.
+    The area outside the shield is fully transparent.
+  </desc>
+
+  <defs>
+
+```
+<!-- Exact outer boundary of the shield -->
+<path id="shield-silhouette" d="
+  M 627 101
+  C 496 193, 370 257, 220 301
+  C 213 303, 210 308, 210 316
+  L 210 650
+  C 210 819, 287 945, 406 1026
+  L 627 1146
+  L 848 1026
+  C 969 945, 1046 819, 1046 650
+  L 1046 316
+  C 1046 308, 1041 303, 1034 301
+  C 884 257, 758 193, 627 101
+  Z"/>
+
+<!-- Prevents RGB bar shadows from extending outside the shield -->
+<clipPath id="shield-clip" clipPathUnits="userSpaceOnUse">
+  <use href="#shield-silhouette"/>
+</clipPath>
+
+<radialGradient id="bg"
+                cx="50%"
+                cy="44%"
+                r="72%">
+  <stop offset="0%" stop-color="#071a31"/>
+  <stop offset="55%" stop-color="#041427"/>
+  <stop offset="100%" stop-color="#010914"/>
+</radialGradient>
+
+<radialGradient id="vignette"
+                cx="50%"
+                cy="48%"
+                r="67%">
+  <stop offset="62%"
+        stop-color="#000000"
+        stop-opacity="0"/>
+  <stop offset="100%"
+        stop-color="#000000"
+        stop-opacity="0.38"/>
+</radialGradient>
+
+<linearGradient id="leftShield"
+                x1="0.24"
+                y1="0.05"
+                x2="0.72"
+                y2="0.98">
+  <stop offset="0%" stop-color="#67f58a"/>
+  <stop offset="36%" stop-color="#38e67e"/>
+  <stop offset="72%" stop-color="#17cf78"/>
+  <stop offset="100%" stop-color="#08aa73"/>
+</linearGradient>
+
+<linearGradient id="rightShield"
+                x1="0.19"
+                y1="0.04"
+                x2="0.75"
+                y2="0.98">
+  <stop offset="0%" stop-color="#12c9b0"/>
+  <stop offset="34%" stop-color="#08b7d6"/>
+  <stop offset="70%" stop-color="#0999ed"/>
+  <stop offset="100%" stop-color="#0870e4"/>
+</linearGradient>
+
+<linearGradient id="redBar"
+                x1="0.2"
+                y1="0"
+                x2="0.8"
+                y2="1">
+  <stop offset="0%" stop-color="#ff3039"/>
+  <stop offset="48%" stop-color="#ff1d2a"/>
+  <stop offset="100%" stop-color="#bd0b1d"/>
+</linearGradient>
+
+<linearGradient id="greenBar"
+                x1="0.18"
+                y1="0"
+                x2="0.82"
+                y2="1">
+  <stop offset="0%" stop-color="#32e985"/>
+  <stop offset="52%" stop-color="#20d978"/>
+  <stop offset="100%" stop-color="#08aa65"/>
+</linearGradient>
+
+<linearGradient id="blueBar"
+                x1="0.18"
+                y1="0"
+                x2="0.82"
+                y2="1">
+  <stop offset="0%" stop-color="#1786ff"/>
+  <stop offset="50%" stop-color="#1169f3"/>
+  <stop offset="100%" stop-color="#092fc4"/>
+</linearGradient>
+
+<linearGradient id="edgeHighlightLeft"
+                x1="0"
+                y1="0"
+                x2="1"
+                y2="1">
+  <stop offset="0%"
+        stop-color="#c2ffd1"
+        stop-opacity="0.55"/>
+  <stop offset="40%"
+        stop-color="#74ffae"
+        stop-opacity="0.12"/>
+  <stop offset="100%"
+        stop-color="#007e58"
+        stop-opacity="0.10"/>
+</linearGradient>
+
+<linearGradient id="edgeHighlightRight"
+                x1="0"
+                y1="0"
+                x2="1"
+                y2="1">
+  <stop offset="0%"
+        stop-color="#7dffe6"
+        stop-opacity="0.45"/>
+  <stop offset="42%"
+        stop-color="#3ce8ff"
+        stop-opacity="0.12"/>
+  <stop offset="100%"
+        stop-color="#003eaf"
+        stop-opacity="0.14"/>
+</linearGradient>
+
+<!-- Shadow is used only behind the internal RGB bars -->
+<filter id="barShadow"
+        x="-35%"
+        y="-15%"
+        width="170%"
+        height="135%"
+        color-interpolation-filters="sRGB">
+
+  <feGaussianBlur in="SourceAlpha"
+                  stdDeviation="10"
+                  result="blur"/>
+
+  <feOffset in="blur"
+            dy="10"
+            result="offset"/>
+
+  <feColorMatrix in="offset"
+                 type="matrix"
+                 values="
+                   0 0 0 0 0
+                   0 0 0 0 0
+                   0 0 0 0 0.02
+                   0 0 0 0.55 0"
+                 result="shadow"/>
+
+  <feMerge>
+    <feMergeNode in="shadow"/>
+    <feMergeNode in="SourceGraphic"/>
+  </feMerge>
+</filter>
+```
+
+  </defs>
+
+  <!-- No full-canvas background: outer pixels stay transparent -->
+
+  <!-- Shield-shaped dark interior -->
+
+<use href="#shield-silhouette"
+    fill="url(#bg)"/>
+
+  <!-- RGB subpixel bars -->
+
+  <g clip-path="url(#shield-clip)">
+    <g filter="url(#barShadow)">
+
+```
+  <path d="
+    M 419 555
+    H 501
+    A 14 14 0 0 1 515 569
+    V 1027
+    H 405
+    V 569
+    A 14 14 0 0 1 419 555
+    Z"
+    fill="url(#redBar)"/>
+
+  <path d="
+    M 582 448
+    H 668
+    A 14 14 0 0 1 682 462
+    V 1097
+    H 568
+    V 462
+    A 14 14 0 0 1 582 448
+    Z"
+    fill="url(#greenBar)"/>
+
+  <path d="
+    M 749 555
+    H 832
+    A 14 14 0 0 1 846 569
+    V 1027
+    H 735
+    V 569
+    A 14 14 0 0 1 749 555
+    Z"
+    fill="url(#blueBar)"/>
+
+</g>
+```
+
+  </g>
+
+  <!-- Left shield half -->
+
+<path id="left-half" d="
+ M 627 101
+ C 496 193, 370 257, 220 301
+ C 213 303, 210 308, 210 316
+ L 210 650
+ C 210 819, 287 945, 406 1026
+ L 627 1146
+ L 627 1096
+ L 511 1026
+ C 378 947, 299 835, 299 649
+ L 299 466
+ L 627 308
+ Z"
+ fill="url(#leftShield)"/>
+
+  <!-- Right shield half -->
+
+<path id="right-half" d="
+ M 627 101
+ C 758 193, 884 257, 1034 301
+ C 1041 303, 1046 308, 1046 316
+ L 1046 650
+ C 1046 819, 969 945, 848 1026
+ L 627 1146
+ L 627 1096
+ L 743 1026
+ C 876 947, 955 835, 955 649
+ L 955 466
+ L 627 308
+ Z"
+ fill="url(#rightShield)"/>
+
+  <!-- Left outer highlight -->
+
+<path d="
+ M 627 101
+ C 496 193, 370 257, 220 301
+ C 213 303, 210 308, 210 316
+ L 210 650
+ C 210 819, 287 945, 406 1026
+ L 627 1146"
+ fill="none"
+ stroke="url(#edgeHighlightLeft)"
+ stroke-width="2"
+ stroke-linecap="round"
+ opacity="0.7"/>
+
+  <!-- Right outer highlight -->
+
+<path d="
+ M 627 101
+ C 758 193, 884 257, 1034 301
+ C 1041 303, 1046 308, 1046 316
+ L 1046 650
+ C 1046 819, 969 945, 848 1026
+ L 627 1146"
+ fill="none"
+ stroke="url(#edgeHighlightRight)"
+ stroke-width="2"
+ stroke-linecap="round"
+ opacity="0.7"/>
+
+  <!-- Center seam -->
+
+<path d="M 627 101 L 627 308"
+     fill="none"
+     stroke="#86ffe7"
+     stroke-opacity="0.18"
+     stroke-width="1.5"/>
+
+  <!-- Left inner edge -->
+
+<path d="M 627 308 L 299 466"
+     fill="none"
+     stroke="#8affb7"
+     stroke-opacity="0.23"
+     stroke-width="1.3"/>
+
+  <!-- Right inner edge -->
+
+<path d="M 627 308 L 955 466"
+     fill="none"
+     stroke="#5be9ff"
+     stroke-opacity="0.22"
+     stroke-width="1.3"/>
+
+  <!-- Bottom seam -->
+
+<path d="M 627 1096 L 627 1146"
+     fill="none"
+     stroke="#0a8d9d"
+     stroke-opacity="0.45"
+     stroke-width="1.2"/>
+
+  <!-- Shield-shaped vignette -->
+
+<use href="#shield-silhouette"
+    fill="url(#vignette)"
+    pointer-events="none"/>
+
+</svg>
