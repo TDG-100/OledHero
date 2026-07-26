@@ -14,8 +14,8 @@ AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\OLEDHero
 DefaultGroupName=OLEDHero
 DisableProgramGroupPage=yes
-ArchitecturesAllowed=x64
-ArchitecturesInstallIn64BitMode=x64
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=admin
 OutputDir=..\dist
 OutputBaseFilename=OledHero-{#MyAppVersion}-Setup-x64
@@ -27,7 +27,7 @@ WizardStyle=modern
 UninstallDisplayIcon={app}\{#MyAppExeName}
 
 [Files]
-Source: "..\dist\installer\oledhero.dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\dist\.work\oledhero.dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
