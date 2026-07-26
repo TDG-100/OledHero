@@ -31,13 +31,32 @@ Prerequisites:
 - [Install VS Code](https://code.visualstudio.com/) or any other IDE you like
 
 Clone the repository and ooppen the folder in VS Code:
-```
+```bash
 git clone https://github.com/TDG-100/OledHero oledhero
 ```
 
 Install all python dependencies and create the python virtual environment using uv.
-```
+```bash
 uv sync
 ```
 
 It is also advisable to install the recommended extensions for VS Code when prompted to.
+
+# Release build
+
+## Building locally
+
+The single file executable and portable installation can be built cross platform using the buildscript.
+```bash
+scripts/build.sh
+```
+
+## Windows
+
+The Windows specific installer and single file executable can be built using [InnoSetup](https://github.com/jrsoftware/issrc). Installation using winget:
+
+```powershell
+winget install --id JRSoftware.InnoSetup.7 -e -s winget -i
+```
+
+
