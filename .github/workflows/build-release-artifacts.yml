@@ -1,0 +1,164 @@
+name: Build release artifacts
+
+on:
+  push:
+    tags:
+      - "v*"
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch, tag, or commit SHA to build"
+        required: true
+        default: "main"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.ref }}
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v8.1.0
+        with:
+          python-version: "3.14"
+          enable-cache: true
+
+      - name: Lint
+        run: uv run --locked --group dev python scripts/ci.py lint
+
+  prepare-build:
+    name: Prepare build
+    if: github.event_name != 'pull_request'
+    needs: lint
+    runs-on: ubuntu-latest
+    outputs:
+      ref: ${{ steps.build-ref.outputs.ref }}
+
+    steps:
+      - name: Check out build ref
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.ref }}
+          fetch-depth: 0
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v8.1.0
+        with:
+          python-version: "3.14"
+          enable-cache: true
+
+      - name: Record build commit
+        id: build-ref
+        shell: bash
+        run: uv run --locked python scripts/ci.py build-ref >> "$GITHUB_OUTPUT"
+
+      - name: Verify release tag matches the application version
+        if: github.event_name == 'push'
+        run: >
+          uv run --locked python scripts/ci.py verify-release
+          --tag "${{ github.ref_name }}"
+
+  build-windows:
+    needs: prepare-build
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare-build.outputs.ref }}
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v8.1.0
+        with:
+          python-version: "3.14"
+          enable-cache: true
+
+      - name: Build executables and installer
+        run: uv run --locked python scripts/build.py
+
+      - name: Verify Windows artifacts
+        run: uv run --locked python scripts/ci.py verify-artifacts
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: OledHero-Windows
+          path: |
+            dist/OledHero-*-Windows-x64.zip
+            dist/OledHero-*-Windows-x64.exe
+            dist/OledHero-*-Setup-x64.exe
+          if-no-files-found: error
+
+  build-linux:
+    needs: prepare-build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare-build.outputs.ref }}
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v8.1.0
+        with:
+          python-version: "3.14"
+          enable-cache: true
+
+      - name: Install native build tools
+        run: sudo apt-get update && sudo apt-get install --yes patchelf
+
+      - name: Build Linux artifacts
+        run: uv run --locked python scripts/build.py
+
+      - name: Verify Linux artifacts
+        run: uv run --locked python scripts/ci.py verify-artifacts
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: OledHero-Linux
+          path: |
+            dist/OledHero-*-Linux-x64.zip
+            dist/OledHero-*-Linux-x64
+          if-no-files-found: error
+
+  publish-release:
+    name: Publish GitHub release
+    if: github.event_name == 'push'
+    needs: [build-windows, build-linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: OledHero-Windows
+          path: release-assets
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: OledHero-Linux
+          path: release-assets
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: >
+          uv run --locked python scripts/ci.py publish-release
+          --tag "$TAG_NAME" --assets-dir release-assets

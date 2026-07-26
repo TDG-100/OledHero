@@ -6,7 +6,6 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QImage, QPainter
 from PySide6.QtSvg import QSvgRenderer
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SVG_PATH = PROJECT_ROOT / "src" / "oledhero" / "assets" / "OledHero.svg"
 ICO_PATH = SVG_PATH.with_suffix(".ico")

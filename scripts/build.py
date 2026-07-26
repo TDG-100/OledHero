@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 from __future__ import annotations
 
 import os
@@ -32,6 +31,25 @@ def determine_target() -> tuple[str, str, bool]:
     elif sys.platform.startswith("linux"):
         return "Linux-x64", "", False
     raise RuntimeError(f"Unsupported operating system: {sys.platform!r}")
+
+
+def release_artifact_paths(
+    app_version: str, platform_name: str, suffix: str, is_windows: bool
+) -> list[Path]:
+    artifacts = [
+        DIST_DIR / f"{APP_NAME}-{app_version}-{platform_name}.zip",
+        DIST_DIR / f"{APP_NAME}-{app_version}-{platform_name}{suffix}",
+    ]
+    if is_windows:
+        artifacts.append(DIST_DIR / f"{APP_NAME}-{app_version}-Setup-x64.exe")
+    return artifacts
+
+
+def verify_release_artifacts(artifacts: list[Path]) -> None:
+    missing = [path for path in artifacts if not path.is_file()]
+    if missing:
+        formatted_paths = "\n  ".join(str(path) for path in missing)
+        raise RuntimeError(f"Expected release artifacts were not created:\n  {formatted_paths}")
 
 
 def nuitka_build(mode: str, executable: str, is_windows: bool) -> Path:
@@ -102,7 +120,8 @@ def main() -> int:
     app_version = version()
     platform_name, suffix, is_windows = determine_target()
     standalone_executable = f"{APP_NAME}{suffix}"
-    portable_executable = f"{APP_NAME}-{app_version}-{platform_name}{suffix}"
+    artifacts = release_artifact_paths(app_version, platform_name, suffix, is_windows)
+    bundle, portable, *optional_installer = artifacts
 
     run("uv", "sync", "--locked", "--group", "dev")
     shutil.rmtree(DIST_DIR, ignore_errors=True)
@@ -110,12 +129,11 @@ def main() -> int:
 
     print(f"Building {APP_NAME} v{app_version} for {platform_name}")
     standalone = nuitka_build("standalone", standalone_executable, is_windows)
-    bundle = DIST_DIR / f"{APP_NAME}-{app_version}-{platform_name}.zip"
     make_zip(standalone.parent, bundle)
 
-    portable = nuitka_build("onefile", portable_executable, is_windows)
+    nuitka_build("onefile", portable.name, is_windows)
     if is_windows:
-        installer = DIST_DIR / f"{APP_NAME}-{app_version}-Setup-x64.exe"
+        installer = optional_installer[0]
         run(
             str(inno_setup()),
             f"/DMyAppVersion={app_version}",
@@ -125,11 +143,11 @@ def main() -> int:
         if not installer.is_file():
             raise RuntimeError(f"Installer was not created: {installer}")
 
+    verify_release_artifacts(artifacts)
+
     print("\nBuild completed:")
-    print(f"  ZIP bundle:  {bundle}")
-    print(f"  Executable:  {portable}")
-    if is_windows:
-        print(f"  Installer:   {installer}")
+    for artifact in artifacts:
+        print(f"  {artifact}")
     return 0
 
 
