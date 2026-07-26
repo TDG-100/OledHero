@@ -1,0 +1,138 @@
+name: Build release artifacts
+
+on:
+  push:
+    tags:
+      - "v*"
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v8
+        with:
+          python-version: "3.14"
+          enable-cache: true
+
+      - name: Lint
+        run: uv run --group dev ruff check scripts/build.py
+
+      - name: Verify release tag matches the application version
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          version="$(uv run oledhero --version)"
+          test "$GITHUB_REF_NAME" = "v$version"
+
+      - name: Verify release tag points to main
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          tag_commit="$(git rev-parse "$GITHUB_REF^{commit}")"
+          git merge-base --is-ancestor "$tag_commit" origin/main
+
+  build-windows:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: verify
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v8
+        with:
+          python-version: "3.14"
+          enable-cache: true
+
+      - name: Build executables and installer
+        run: uv run --locked python scripts/build.py
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: OledHero-Windows
+          path: |
+            dist/OledHero-*-Windows-x64.zip
+            dist/OledHero-*-Windows-x64.exe
+            dist/OledHero-*-Setup-x64.exe
+          if-no-files-found: error
+
+  build-linux:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: verify
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v8
+        with:
+          python-version: "3.14"
+          enable-cache: true
+
+      - name: Install native build tools
+        run: sudo apt-get update && sudo apt-get install --yes patchelf
+
+      - name: Build Linux artifacts
+        run: uv run --locked python scripts/build.py
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: OledHero-Linux
+          path: |
+            dist/OledHero-*-Linux-x64.zip
+            dist/OledHero-*-Linux-x64
+          if-no-files-found: error
+
+  publish-release:
+    name: Publish GitHub release
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [build-windows, build-linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: OledHero-Windows
+          path: release-assets
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: OledHero-Linux
+          path: release-assets
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          shopt -s nullglob
+          assets=(release-assets/OledHero-*)
+          test "${#assets[@]}" -gt 0
+
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            gh release upload "$TAG_NAME" "${assets[@]}" --clobber
+          else
+            gh release create "$TAG_NAME" "${assets[@]}" --title "$TAG_NAME" --generate-notes
+          fi
