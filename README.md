@@ -114,3 +114,43 @@ uv run --locked nuitka \
   --output-filename=OledHero \
   src/oledhero
 ```
+
+## Continuous Integration and Releases
+
+Every pull request runs the `Lint` GitHub Actions check (`ruff check .`). To
+make this a merge precondition, configure the `main` branch protection rule in
+GitHub to require the `Lint` status check before merging.
+
+Pushing a version tag such as `v0.1.0` publishes a GitHub release only when the
+tag points directly to the current `main` commit and matches
+`src/oledhero/version.py`. The workflow produces Windows and Linux artifacts.
+
+To build artifacts from any branch, tag, or commit without publishing a GitHub
+release, open **Actions** → **Build release artifacts** → **Run workflow**, then
+provide the desired ref. The artifacts are attached to that workflow run.
+
+### Run CI checks locally
+
+The CI commands are available locally through `scripts/ci.py`:
+
+```
+# Requires the dev dependency group.
+uv run --locked --group dev python scripts/ci.py lint
+
+# After checking out a tag, confirm that it has the matching application version
+# and points directly to main. The tag must exist locally; fetch it first if needed.
+uv run --locked python scripts/ci.py verify-release --tag v0.1.0
+
+# After a native build, confirm that every expected artifact was produced.
+uv run --locked python scripts/ci.py verify-artifacts
+```
+
+`publish-release` is also available for authenticated local use, but creates or
+updates a remote GitHub release and should be used deliberately:
+
+```
+uv run --locked python scripts/ci.py publish-release \
+  --tag v0.1.0 --assets-dir release-assets
+```
+
+Add `--dry-run` to validate the release assets without calling GitHub.

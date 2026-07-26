@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Run the checks and publishing steps used by GitHub Actions locally."""
 
 from __future__ import annotations
@@ -168,3 +167,6 @@ if __name__ == "__main__":
     except (RuntimeError, ValueError) as error:
         print(f"error: {error}", file=sys.stderr)
         raise SystemExit(1) from error
+    except subprocess.CalledProcessError as error:
+        print(f"error: command failed with exit code {error.returncode}", file=sys.stderr)
+        raise SystemExit(error.returncode) from error
