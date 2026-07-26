@@ -28,7 +28,7 @@ jobs:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.ref }}
 
       - name: Install uv and Python
-        uses: astral-sh/setup-uv@v8
+        uses: astral-sh/setup-uv@v8.1.0
         with:
           python-version: "3.14"
           enable-cache: true
@@ -52,7 +52,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install uv and Python
-        uses: astral-sh/setup-uv@v8
+        uses: astral-sh/setup-uv@v8.1.0
         with:
           python-version: "3.14"
           enable-cache: true
@@ -79,7 +79,7 @@ jobs:
           ref: ${{ needs.prepare-build.outputs.ref }}
 
       - name: Install uv and Python
-        uses: astral-sh/setup-uv@v8
+        uses: astral-sh/setup-uv@v8.1.0
         with:
           python-version: "3.14"
           enable-cache: true
@@ -111,7 +111,7 @@ jobs:
           ref: ${{ needs.prepare-build.outputs.ref }}
 
       - name: Install uv and Python
-        uses: astral-sh/setup-uv@v8
+        uses: astral-sh/setup-uv@v8.1.0
         with:
           python-version: "3.14"
           enable-cache: true
