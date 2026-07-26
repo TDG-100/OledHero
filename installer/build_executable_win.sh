@@ -8,7 +8,7 @@ build_oledhero() {
         --standalone \
         --assume-yes-for-downloads \
         --python-flag=-m \
-        --windows-console-mode=disable \
+        --windows-console-mode=attach \
         --enable-plugin=pyside6 \
         --windows-icon-from-ico=src/oledhero/assets/OledHero.ico \
         --include-data-dir=src/oledhero/assets=oledhero/assets \
