@@ -8,6 +8,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
+
 from build import (
     determine_target,
     release_artifact_paths,
@@ -15,7 +18,6 @@ from build import (
     version,
 )
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
 APP_NAME = "OledHero"
 
 
