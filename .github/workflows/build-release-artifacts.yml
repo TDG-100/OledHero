@@ -5,19 +5,27 @@ on:
     tags:
       - "v*"
   pull_request:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch, tag, or commit SHA to build"
+        required: true
+        default: "main"
+        type: string
 
 permissions:
   contents: read
 
 jobs:
-  verify:
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
 
     steps:
       - name: Clone repository
         uses: actions/checkout@v6
         with:
-          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.ref }}
 
       - name: Install uv and Python
         uses: astral-sh/setup-uv@v8
@@ -26,30 +34,67 @@ jobs:
           enable-cache: true
 
       - name: Lint
-        run: uv run --group dev ruff check scripts/build.py
+        run: uv run --locked --group dev ruff check .
+
+  prepare-build:
+    name: Prepare build
+    if: github.event_name != 'pull_request'
+    needs: lint
+    runs-on: ubuntu-latest
+    outputs:
+      ref: ${{ steps.build-ref.outputs.ref }}
+
+    steps:
+      - name: Check out build ref
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.ref }}
+          fetch-depth: 0
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v8
+        with:
+          python-version: "3.14"
+          enable-cache: true
+
+      - name: Record build commit
+        id: build-ref
+        shell: bash
+        run: echo "ref=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
 
       - name: Verify release tag matches the application version
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.event_name == 'push'
+        env:
+          TAG_NAME: ${{ github.ref_name }}
         shell: bash
         run: |
+          case "$TAG_NAME" in
+            v*) ;;
+            *) echo "Release tags must start with v (for example, v0.1.0)." >&2; exit 1 ;;
+          esac
+
           version="$(uv run oledhero --version)"
-          test "$GITHUB_REF_NAME" = "v$version"
+          test "$TAG_NAME" = "v$version"
 
       - name: Verify release tag points to main
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.event_name == 'push'
+        env:
+          TAG_NAME: ${{ github.ref_name }}
         shell: bash
         run: |
-          tag_commit="$(git rev-parse "$GITHUB_REF^{commit}")"
-          git merge-base --is-ancestor "$tag_commit" origin/main
+          tag_commit="$(git rev-parse "$TAG_NAME^{commit}")"
+          main_commit="$(git rev-parse origin/main)"
+          test "$tag_commit" = "$main_commit"
 
   build-windows:
-    if: startsWith(github.ref, 'refs/tags/')
-    needs: verify
+    needs: prepare-build
     runs-on: windows-latest
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare-build.outputs.ref }}
 
       - name: Install uv and Python
         uses: astral-sh/setup-uv@v8
@@ -71,13 +116,14 @@ jobs:
           if-no-files-found: error
 
   build-linux:
-    if: startsWith(github.ref, 'refs/tags/')
-    needs: verify
+    needs: prepare-build
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare-build.outputs.ref }}
 
       - name: Install uv and Python
         uses: astral-sh/setup-uv@v8
@@ -102,7 +148,7 @@ jobs:
 
   publish-release:
     name: Publish GitHub release
-    if: startsWith(github.ref, 'refs/tags/')
+    if: github.event_name == 'push'
     needs: [build-windows, build-linux]
     runs-on: ubuntu-latest
     permissions:
