@@ -3,6 +3,18 @@ revision = 3
 requires-python = ">=3.12"
 
 [[package]]
+name = "monitorcontrol"
+version = "4.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyudev", marker = "sys_platform != 'win32'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6d/28/c832e6479d62ac9a1f96fd76cf0148c06ee00a3e4ca26d106c2c7cd0ebd8/monitorcontrol-4.2.0.tar.gz", hash = "sha256:2686024adfecf01c3ee73c93d369bd0890fbb20e12522cb981afa27b13026b33", size = 18911, upload-time = "2026-01-03T18:32:26.34Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8c/cb/fdf3bdbbfe947bf6746a3549d968d77979c670e113b3210d96c185b31051/monitorcontrol-4.2.0-py3-none-any.whl", hash = "sha256:0e8fcfd21fede1b99f26f41d359b2cdecb43f62b3f803c8cb6ad3a896a77ff84", size = 17136, upload-time = "2026-01-03T18:32:25.414Z" },
+]
+
+[[package]]
 name = "nuitka"
 version = "4.1.3"
 source = { registry = "https://pypi.org/simple" }
@@ -12,6 +24,7 @@ sdist = { url = "https://files.pythonhosted.org/packages/3f/d8/bdb7febea4b4fe5d3
 name = "oledhero"
 source = { editable = "." }
 dependencies = [
+    { name = "monitorcontrol" },
     { name = "pyside6" },
 ]
 
@@ -22,7 +35,10 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "pyside6", specifier = ">=6.11.1" }]
+requires-dist = [
+    { name = "monitorcontrol", specifier = ">=4.2.0" },
+    { name = "pyside6", specifier = ">=6.11.1" },
+]
 
 [package.metadata.requires-dev]
 dev = [
@@ -76,6 +92,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/4c/c5/da4c5f23c6540ac5211a1f60177c8dee84b1bf40f2719479587ab8c60731/pyside6_essentials-6.11.1-cp310-abi3-manylinux_2_39_aarch64.whl", hash = "sha256:a039b6da68a3a4b9d243217b2b98d475eed3f617159ef6be925badab53c11b0d", size = 78960051, upload-time = "2026-05-13T09:43:35.423Z" },
     { url = "https://files.pythonhosted.org/packages/64/0e/b663ecc96ca57b5c91b83b6615d6b174380b0faf30338125c26e053d6aa7/pyside6_essentials-6.11.1-cp310-abi3-win_amd64.whl", hash = "sha256:63311bd48e32c584599ab04b9ef7c324082374cd2c9fa533f978fb893bb47e40", size = 77549267, upload-time = "2026-05-13T09:43:44.92Z" },
     { url = "https://files.pythonhosted.org/packages/f1/12/eb6723faf5cb7fa581145da1c15f40d641b96e080f0491af2f1859fdeedb/pyside6_essentials-6.11.1-cp310-abi3-win_arm64.whl", hash = "sha256:11253ea52aabecefe9febddbbe78b43a824129e3af1cec98431028fba7fa954f", size = 57964512, upload-time = "2026-05-13T09:43:52.968Z" },
+]
+
+[[package]]
+name = "pyudev"
+version = "0.24.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/5e/1d/8bdbf651de1002e8b58fbe817bee22b1e8bfcdd24341d42c3238ce9a75f4/pyudev-0.24.4.tar.gz", hash = "sha256:e788bb983700b1a84efc2e88862b0a51af2a995d5b86bc9997546505cf7b36bc", size = 56135, upload-time = "2025-10-08T17:26:58.661Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2a/51/3dc0cd6498b24dea3cdeaed648568e3ca7454d41334d840b114156d7479f/pyudev-0.24.4-py3-none-any.whl", hash = "sha256:b3b6b01c68e6fc628428cc45ff3fe6c277afbb5d96507f14473ddb4a6b959e00", size = 62784, upload-time = "2025-10-08T17:26:57.664Z" },
 ]
 
 [[package]]
