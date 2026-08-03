@@ -33,9 +33,7 @@ def determine_target() -> tuple[str, str, bool]:
     raise RuntimeError(f"Unsupported operating system: {sys.platform!r}")
 
 
-def release_artifact_paths(
-    app_version: str, platform_name: str, suffix: str, is_windows: bool
-) -> list[Path]:
+def release_artifact_paths(app_version: str, platform_name: str, suffix: str, is_windows: bool) -> list[Path]:
     artifacts = [
         DIST_DIR / f"{APP_NAME}-{app_version}-{platform_name}.zip",
         DIST_DIR / f"{APP_NAME}-{app_version}-{platform_name}{suffix}",
@@ -77,13 +75,13 @@ def nuitka_build(mode: str, executable: str, is_windows: bool) -> Path:
         )
     arguments.append("src/oledhero")
     run(*arguments)
-    
+
     # Check output file exists
     if mode == "onefile":
-        result = (DIST_DIR / executable)
+        result = DIST_DIR / executable
     else:
-        result = (WORK_DIR / "oledhero.dist" / executable)
-        
+        result = WORK_DIR / "oledhero.dist" / executable
+
     if not result.is_file():
         raise RuntimeError(f"Nuitka did not create expected file: {result}")
     return result
@@ -109,10 +107,7 @@ def inno_setup() -> Path:
     for candidate in candidates:
         if candidate.is_file():
             return candidate
-    raise RuntimeError(
-        "Inno Setup 6 was not found. Install it with: "
-        "winget install --id JRSoftware.InnoSetup -e -s winget"
-    )
+    raise RuntimeError("Inno Setup 6 was not found. Install it with: winget install --id JRSoftware.InnoSetup -e -s winget")
 
 
 def main() -> int:
