@@ -28,5 +28,4 @@ build-backend = "hatchling.build"
 path = "src/oledhero/version.py"
 
 [tool.ruff]
-# Ruff has no unlimited line-length mode; use a deliberately high limit.
 line-length = 999
