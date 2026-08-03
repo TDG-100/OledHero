@@ -26,3 +26,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.version]
 path = "src/oledhero/version.py"
+
+[tool.ruff]
+line-length = 999

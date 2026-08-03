@@ -4,6 +4,7 @@ import argparse
 import sys
 from collections.abc import Sequence
 
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -39,45 +40,44 @@ def build_parser() -> argparse.ArgumentParser:
 
     subparsers = parser.add_subparsers(dest="command")
 
-    hello_world = subparsers.add_parser("hello", help="Display a hello message.")
-    hello_world.add_argument("--name", required=True, help="Name of the user to greet.")
-    hello_world.set_defaults(handler=_cmd_hello)
-
-    goodbye = subparsers.add_parser("bye", help="Display a goodbye message.")
-    goodbye.set_defaults(handler=_cmd_goodbye)
-
     brightness = subparsers.add_parser("brightness", help="Brightness commands.")
-    brightness.add_argument(
-        "--set", type=int, required=False, help="Brightness level (0-100)."
-    )
+    brightness.add_argument("--set", type=int, required=False, help="Brightness level (0-100).")
     brightness.set_defaults(handler=_cmd_brightness)
 
+    metadata = subparsers.add_parser("metadata", help="Display available metadata")
+    metadata.set_defaults(handler=_cmd_metadata)
+
     return parser
-
-
-def _cmd_hello(args: argparse.Namespace) -> str:
-    return f"Hi {args.name}, I'm OledHero!"
-
-
-def _cmd_goodbye(args: argparse.Namespace) -> str:
-    return "Sad to see you go!"
 
 
 def _cmd_version(args: argparse.Namespace) -> str:
     from oledhero.version import __version__
 
+    return __version__
+
 
 def _cmd_brightness(args: argparse.Namespace) -> str:
     from oledhero.display_controller.monitorcontrol_controller import (
-        MonitorControlProvider,
         MonitorControlController,
+        MonitorControlProvider,
     )
 
-    monitor_controllers:list[MonitorControlController] = MonitorControlProvider().list_ddcci_controllers()
+    monitor_controllers: list[MonitorControlController] = MonitorControlProvider().list_ddcci_controllers()
 
     if args.set is not None:
         for controller in monitor_controllers:
             controller.set_brightness(args.set)
         return f"Brightness set to {args.set}."
 
-    return str([controller.get_brightness() for controller in monitor_controllers])
+    brightness_levels = [controller.get_brightness() for controller in monitor_controllers]
+
+    return "\n".join(f"Monitor {i + 1}: {brightness}%" for i, brightness in enumerate(brightness_levels))
+
+
+def _cmd_metadata(args: argparse.Namespace) -> str:
+    from oledhero.display_metadata.pyside6_metadata import PySide6MetadataProvider
+
+    metadata = PySide6MetadataProvider().list_display_metadata()
+    return "\n\n".join(f"Display {index}\n{display}" 
+                       for index, display in enumerate(metadata, start=1)
+                       )  # fmt: skip
