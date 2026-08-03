@@ -24,7 +24,7 @@ class PySide6MetadataProvider(DisplayMetadataProvider):
 
         primary_screen = application.primaryScreen()
         displays = [
-            self._metadata_from_qscreen(screen, screen == primary_screen)
+            self._metadata_from_qscreen(screen, screen == primary_screen) 
             for screen in application.screens()
         ]  # fmt: skip
 
