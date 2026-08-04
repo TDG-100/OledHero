@@ -61,9 +61,9 @@ class MonitorControlController(DDCCIController):
 
     def _read_identification_hints(self) -> list[str]:
         description = getattr(getattr(self._monitor, "vcp", None), "description", "")
-        if description and  description not in self._identification_hints:
+        if description and description not in self._identification_hints:
             self._identification_hints.append(str(description))
-            
+
         try:
             with self._monitor:
                 capabilities = self._monitor.get_vcp_capabilities()

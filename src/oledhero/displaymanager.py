@@ -13,17 +13,19 @@ from oledhero.display_metadata.metadata_provider import DisplayMetadataProvider
 
 FUZZY_MATCH_SCORE_CUTOFF = 80.0
 
+
 @dataclass(frozen=True)
 class DisplayControllerPair:
     display: Display
     controller: DDCCIController
+
 
 class DisplayManager(DisplayManagerProtocol):
     def __init__(self, controller_provider: ControllerProvider, metadata_provider: DisplayMetadataProvider) -> None:
         self._controller_provider = controller_provider
         self._metadata_provider = metadata_provider
         self._displays: dict[str, DisplayControllerPair] = {}
-    
+
     def list_displays(self) -> list[Display]:
         self._displays = self._list_display_controller_pairs()
         return [display_controller_pair.display for display_controller_pair in self._displays]
@@ -50,30 +52,30 @@ class DisplayManager(DisplayManagerProtocol):
     def _list_display_controller_pairs(self) -> list[DisplayControllerPair]:
         metadata = list(self._metadata_provider.list_display_metadata())
         controllers = list(self._controller_provider.list_ddcci_controllers())
-        
+
         displays: list[DisplayControllerPair] = []
         for c_idx, m_idx in self._pair_controllers(metadata, controllers):
-            
             compatible = controllers[c_idx].is_supported()
             brightness = controllers[c_idx].get_brightness() if compatible else None
-            
-            displays.append(DisplayControllerPair(
-                display=Display(
-                                id=metadata[m_idx].identity,
-                                name=metadata[m_idx].edid_name,
-                                metadata=metadata[m_idx],
-                                brightness=brightness,
-                                compatible=compatible,
-                            ),
-                controller=controllers[c_idx]
-                )   
+
+            displays.append(
+                DisplayControllerPair(
+                    display=Display(
+                        id=metadata[m_idx].identity,
+                        name=metadata[m_idx].edid_name,
+                        metadata=metadata[m_idx],
+                        brightness=brightness,
+                        compatible=compatible,
+                    ),
+                    controller=controllers[c_idx],
+                )
             )
-            
+
         return displays
 
     def _pair_controllers(self, metadata: Sequence[DisplayMetadata], controllers: Sequence[DDCCIController]) -> list[tuple[int, int]]:
         """Pair controllers based on identification hints and metadata."""
-        
+
         pairs: list[tuple[int, int]] = []
         paired_metadata_indexes: set[int] = set()
         paired_controller_indexes: set[int] = set()
@@ -90,21 +92,20 @@ class DisplayManager(DisplayManagerProtocol):
                         metadata_index,
                     )
                 )
-        
+
         # Sort by score
         candidates.sort(key=lambda candidate: (-candidate[0], candidate[1], candidate[2]))
 
         # This will pair the best match first as list is sorted by score
         for score, controller_index, metadata_index in candidates:
-            
-            if score == 0: 
+            if score == 0:
                 # No hint matches
                 break
-            
+
             if controller_index in paired_controller_indexes or metadata_index in paired_metadata_indexes:
                 # Already paired
                 continue
-            
+
             # Make new pair
             pairs.append((metadata_index, controller_index))
             paired_metadata_indexes.add(metadata_index)
