@@ -47,6 +47,13 @@ def build_parser() -> argparse.ArgumentParser:
     metadata = subparsers.add_parser("metadata", help="Display available metadata")
     metadata.set_defaults(handler=_cmd_metadata)
 
+    displays = subparsers.add_parser(
+        "displays",
+        aliases=["display"],
+        help="Display paired metadata and controller information.",
+    )
+    displays.set_defaults(handler=_cmd_displays)
+
     return parser
 
 
@@ -81,3 +88,16 @@ def _cmd_metadata(args: argparse.Namespace) -> str:
     return "\n\n".join(f"Display {index}\n{display}" 
                        for index, display in enumerate(metadata, start=1)
                        )  # fmt: skip
+
+
+def _cmd_displays(args: argparse.Namespace) -> str:
+    from oledhero.display_controller.monitorcontrol_controller import MonitorControlProvider
+    from oledhero.display_metadata.pyside6_metadata import PySide6MetadataProvider
+    from oledhero.displaymanager import DisplayManager
+
+    displays = DisplayManager(
+        MonitorControlProvider(),
+        PySide6MetadataProvider(),
+    ).list_displays()
+
+    return "\n\n".join(f"Display {index}\n{display}" for index, display in enumerate(displays, start=1))

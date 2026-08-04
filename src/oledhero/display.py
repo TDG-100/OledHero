@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Protocol
 
+from slugify import slugify
+
 
 @dataclass(frozen=True)
 class DisplayGeometry:
@@ -37,13 +39,13 @@ class DisplayMetadata:
     @property
     def edid_name(self) -> str:
         """A human-readable name based on EDID data."""
-        return " ".join(part for part in (self.manufacturer, self.model) if part)
+        return " ".join(part for part in (self.manufacturer.split()[0], self.model) if part)
 
     @property
     def identity(self) -> str:
         """A stable identifier based on the available EDID fields."""
         parts = (self.manufacturer, self.model, self.serial_number)
-        return "_".join(part.strip() or "unknown" for part in parts)
+        return slugify("_".join(parts), allow_unicode=True, lowercase=True)
 
 
 @dataclass(frozen=True)
@@ -53,6 +55,20 @@ class Display:
     metadata: DisplayMetadata
     brightness: int | None
     compatible: bool
+
+    def __str__(self) -> str:
+        brightness = f"{self.brightness}%" if self.brightness is not None else "-"
+        metadata = "\n".join(f"  {line}" for line in str(self.metadata).splitlines())
+        return "\n".join(
+            [
+                f"  ID:         {self.id or '-'}",
+                f"  Name:       {self.name or '-'}",
+                f"  Compatible: {'yes' if self.compatible else 'no'}",
+                f"  Brightness: {brightness}",
+                "  Metadata:",
+                metadata,
+            ]
+        )
 
 
 class DisplayManagerProtocol(Protocol):
