@@ -17,10 +17,12 @@ class MonitorControlController(DDCCIController):
         self._monitor: Monitor = monitor
         self._max_brightness: int | None = None
         self._is_supported: bool | None = None
+        self._identification_hints: list[str] = []
 
-        # check for capability and max brightness
+        # check for capability, max brightness and model hints
         self._is_supported = self.is_supported()
         self.get_brightness() if self._is_supported else None
+        self._read_identification_hints() if self._is_supported else None
 
     def is_supported(self) -> bool:
         try:
@@ -31,8 +33,10 @@ class MonitorControlController(DDCCIController):
         except VCPError:
             return False
 
-    def get_brightness(self) -> int:
+    def identification_hints(self) -> list[str]:
+        return self._identification_hints
 
+    def get_brightness(self) -> int:
         try:
             with self._monitor:
                 current, maximum = self._monitor.vcp.get_vcp_feature(VCP_COMMAND_BRIGHTNESS)
@@ -54,6 +58,21 @@ class MonitorControlController(DDCCIController):
                 self._monitor.set_luminance(monitor_brightness)
         except VCPError as error:
             raise DDCCIUnsupportedError(f"Could not set brightness: {error}") from error
+
+    def _read_identification_hints(self) -> list[str]:
+        description = getattr(getattr(self._monitor, "vcp", None), "description", "")
+        if description and  description not in self._identification_hints:
+            self._identification_hints.append(str(description))
+            
+        try:
+            with self._monitor:
+                capabilities = self._monitor.get_vcp_capabilities()
+                model = capabilities.get("model")
+                if model and model not in self._identification_hints:
+                    self._identification_hints.append(str(model))
+                return self._identification_hints
+        except VCPError:
+            return False
 
 
 class MonitorControlProvider(ControllerProvider):

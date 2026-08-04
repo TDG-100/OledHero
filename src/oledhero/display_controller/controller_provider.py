@@ -12,6 +12,9 @@ class DDCCIController(Protocol):
     def is_supported(self) -> bool:
         """Check if the monitor supports DDC/CI brightness control."""
 
+    def identification_hints(self) -> Sequence[str]:
+        """Fill with any data that may help identify the monitor."""
+
     def get_brightness(self) -> int:
         """Read the monitor current brightness."""
 
