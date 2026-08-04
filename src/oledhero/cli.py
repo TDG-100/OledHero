@@ -11,8 +11,9 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     handler = getattr(args, "handler", None)
     if handler is None:
-        parser.print_help()
-        return 0
+        from oledhero.gui import main as gui_main
+
+        return gui_main(["oledhero"])
 
     try:
         output = handler(args)
@@ -40,6 +41,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     subparsers = parser.add_subparsers(dest="command")
 
+    gui = subparsers.add_parser("gui", help="Open the OLEDHero desktop application.")
+    gui.set_defaults(handler=_cmd_gui)
+
     brightness = subparsers.add_parser("brightness", help="Brightness commands.")
     brightness.add_argument("--set", type=int, required=False, help="Brightness level (0-100).")
     brightness.set_defaults(handler=_cmd_brightness)
@@ -55,6 +59,12 @@ def build_parser() -> argparse.ArgumentParser:
     displays.set_defaults(handler=_cmd_displays)
 
     return parser
+
+
+def _cmd_gui(args: argparse.Namespace) -> int:
+    from oledhero.gui import main as gui_main
+
+    return gui_main(["oledhero"])
 
 
 def _cmd_version(args: argparse.Namespace) -> str:

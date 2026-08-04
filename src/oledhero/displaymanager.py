@@ -34,8 +34,6 @@ class DisplayManager(DisplayManagerProtocol):
         return self._get_controller(display_id).get_brightness()
 
     def set_brightness(self, display_id: str, brightness: int) -> None:
-        if not 0 <= brightness <= 100:
-            raise ValueError("brightness must be between 0 and 100")
         self._get_controller(display_id).set_brightness(brightness)
 
     def _get_controller(self, display_id: str) -> DDCCIController:
