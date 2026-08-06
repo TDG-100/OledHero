@@ -1,10 +1,14 @@
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QRectF, QSize, Qt
-from PySide6.QtGui import QIcon, QPainter, QPixmap
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QFrame, QHBoxLayout, QLabel, QMainWindow, QStatusBar, QVBoxLayout, QWidget
 
+from oledhero.display import DisplayManagerProtocol
+from oledhero.display_controller.monitorcontrol_controller import MonitorControlProvider
+from oledhero.display_metadata.pyside6_metadata import PySide6MetadataProvider
+from oledhero.displaymanager import DisplayManager
+from oledhero.gui.display_selector import DisplaySelector
 from oledhero.gui.theme import APP_STYLESHEET
 from oledhero.version import __version__
 
@@ -14,63 +18,6 @@ class GlobalActions(QWidget):
         super().__init__(parent)
         self.setObjectName("globalActions")
         self.setMinimumWidth(260)
-
-
-class DisplaySelector(QWidget):
-    _BACKGROUND_LOGO_OPACITY = 0.35
-    _BACKGROUND_LOGO_SCALING = 0.90
-
-    def __init__(self, parent: QWidget | None = None) -> None:
-        super().__init__(parent)
-        self.setObjectName("displaySelector")
-        logo_path = Path(__file__).parent.parent / "assets" / "OledHero.svg"
-        self._background_logo = QPixmap(str(logo_path))
-        self._scaled_background_logo: tuple[QSize, QPixmap] | None = None
-
-    def paintEvent(self, event) -> None:
-        super().paintEvent(event)
-
-        bounds = QRectF(self.rect())
-        bounds.adjust(
-            bounds.width() * (1 - self._BACKGROUND_LOGO_SCALING) / 2,
-            bounds.height() * (1 - self._BACKGROUND_LOGO_SCALING) / 2,
-            -bounds.width() * (1 - self._BACKGROUND_LOGO_SCALING) / 2,
-            -bounds.height() * (1 - self._BACKGROUND_LOGO_SCALING) / 2,
-        )
-        painter = QPainter(self)
-        self._draw_background_logo(painter, bounds)
-
-    def _draw_background_logo(self, painter: QPainter, bounds: QRectF) -> None:
-
-        logo_size = self._background_logo.size().scaled(
-            bounds.size().toSize(),
-            Qt.AspectRatioMode.KeepAspectRatio,
-        )
-        device_pixel_ratio = self.devicePixelRatioF()
-        render_size = QSize(
-            max(1, round(logo_size.width() * device_pixel_ratio)),
-            max(1, round(logo_size.height() * device_pixel_ratio)),
-        )
-
-        cached = self._scaled_background_logo
-        if cached is None or cached[0] != render_size:
-            cached = (
-                render_size,
-                self._background_logo.scaled(
-                    render_size,
-                    Qt.AspectRatioMode.KeepAspectRatio,
-                    Qt.TransformationMode.SmoothTransformation,
-                ),
-            )
-            self._scaled_background_logo = cached
-
-        logo = cached[1]
-        target = QRectF(0, 0, logo_size.width(), logo_size.height())
-        target.moveCenter(bounds.center())
-        painter.save()
-        painter.setOpacity(self._BACKGROUND_LOGO_OPACITY)
-        painter.drawPixmap(target, logo, QRectF(logo.rect()))
-        painter.restore()
 
 
 class DisplaySettings(QFrame):
@@ -84,14 +31,18 @@ class AppStatusBar(QStatusBar):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setObjectName("statusBar")
-        self.setSizeGripEnabled(True)
+        self.setSizeGripEnabled(False)
 
 
 class MainWindow(QMainWindow):
-    def __init__(self) -> None:
+    def __init__(self, display_manager: DisplayManagerProtocol | None = None) -> None:
         super().__init__()
         self.setWindowTitle("OledHero")
-        self.resize(1400, 880)
+        self.setFixedSize(1400, 880)
+        self._display_manager = display_manager or DisplayManager(
+            MonitorControlProvider(),
+            PySide6MetadataProvider(),
+        )
 
         icon_path = Path(__file__).parent.parent / "assets" / "OledHero.ico"
         self.setWindowIcon(QIcon(str(icon_path)))
@@ -121,7 +72,7 @@ class MainWindow(QMainWindow):
 
         body = QHBoxLayout()
         body.setSpacing(14)
-        body.addWidget(DisplaySelector(central_widget), 1)
+        body.addWidget(DisplaySelector(self._display_manager, central_widget), 1)
         body.addWidget(DisplaySettings(central_widget))
         layout.addLayout(body, 1)
 
