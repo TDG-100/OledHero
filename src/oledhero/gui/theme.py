@@ -21,6 +21,13 @@ QFrame#displaySettings {{
     border: 1px solid {BORDER_COLOR};
     border-radius: 7px;
 }}
+QLabel#displaySettingsTitle {{
+    font-size: 20px;
+    font-weight: bold;
+}}
+QLabel#displaySettingsValue {{
+    color: {MUTED_TEXT_COLOR};
+}}
 QStatusBar#statusBar {{
     background: {BACKGROUND_COLOR};
     border-top: 1px solid {PANEL_COLOR};

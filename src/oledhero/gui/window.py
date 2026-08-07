@@ -2,13 +2,14 @@ import sys
 from pathlib import Path
 
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QApplication, QFrame, QHBoxLayout, QLabel, QMainWindow, QStatusBar, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QApplication, QHBoxLayout, QLabel, QMainWindow, QStatusBar, QVBoxLayout, QWidget
 
 from oledhero.display import DisplayManagerProtocol
 from oledhero.display_controller.monitorcontrol_controller import MonitorControlProvider
 from oledhero.display_metadata.pyside6_metadata import PySide6MetadataProvider
 from oledhero.displaymanager import DisplayManager
 from oledhero.gui.display_selector import DisplaySelector
+from oledhero.gui.display_settings import DisplaySettings
 from oledhero.gui.theme import APP_STYLESHEET
 from oledhero.version import __version__
 
@@ -18,13 +19,6 @@ class GlobalActions(QWidget):
         super().__init__(parent)
         self.setObjectName("globalActions")
         self.setMinimumWidth(260)
-
-
-class DisplaySettings(QFrame):
-    def __init__(self, parent: QWidget | None = None) -> None:
-        super().__init__(parent)
-        self.setObjectName("displaySettings")
-        self.setFixedWidth(475)
 
 
 class AppStatusBar(QStatusBar):
@@ -72,8 +66,11 @@ class MainWindow(QMainWindow):
 
         body = QHBoxLayout()
         body.setSpacing(14)
-        body.addWidget(DisplaySelector(self._display_manager, central_widget), 1)
-        body.addWidget(DisplaySettings(central_widget))
+        display_selector = DisplaySelector(self._display_manager, central_widget)
+        display_settings = DisplaySettings(central_widget, display_selector.selected_display)
+        display_selector.displaySelected.connect(display_settings.set_display)
+        body.addWidget(display_selector, 1)
+        body.addWidget(display_settings)
         layout.addLayout(body, 1)
 
         self.setCentralWidget(central_widget)
