@@ -11,6 +11,7 @@ from oledhero.displaymanager import DisplayManager
 from oledhero.gui.display_selector import DisplaySelector
 from oledhero.gui.display_settings import DisplaySettings
 from oledhero.gui.theme import APP_STYLESHEET
+from oledhero.screen_capture import PySide6ScreenCapture
 from oledhero.version import __version__
 
 
@@ -37,6 +38,7 @@ class MainWindow(QMainWindow):
             MonitorControlProvider(),
             PySide6MetadataProvider(),
         )
+        self._screen_capture = PySide6ScreenCapture()
 
         icon_path = Path(__file__).parent.parent / "assets" / "OledHero.ico"
         self.setWindowIcon(QIcon(str(icon_path)))
@@ -66,7 +68,11 @@ class MainWindow(QMainWindow):
 
         body = QHBoxLayout()
         body.setSpacing(14)
-        display_selector = DisplaySelector(self._display_manager, central_widget)
+        display_selector = DisplaySelector(
+            self._display_manager,
+            central_widget,
+            screenshot_provider=self._screen_capture,
+        )
         display_settings = DisplaySettings(central_widget, display_selector.selected_display)
         display_selector.displaySelected.connect(display_settings.set_display)
         body.addWidget(display_selector, 1)

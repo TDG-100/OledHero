@@ -52,13 +52,15 @@ class DisplayManager(DisplayManagerProtocol):
         controllers = list(self._controller_provider.list_ddcci_controllers())
 
         displays: list[DisplayControllerPair] = []
-        for c_idx, m_idx in self._pair_controllers(metadata, controllers):
+        for m_idx, c_idx in self._pair_controllers(metadata, controllers):
+
             compatible = controllers[c_idx].is_supported()
             brightness = controllers[c_idx].get_brightness() if compatible else None
 
             displays.append(
                 DisplayControllerPair(
                     display=Display(
+                        qt_idx=m_idx,
                         id=metadata[m_idx].identity,
                         name=metadata[m_idx].edid_name,
                         metadata=metadata[m_idx],

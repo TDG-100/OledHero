@@ -51,6 +51,7 @@ class DisplayMetadata:
 @dataclass(frozen=True)
 class Display:
     id: str
+    qt_idx: int
     name: str
     metadata: DisplayMetadata
     brightness: int | None

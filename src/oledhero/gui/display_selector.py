@@ -1,11 +1,12 @@
 from pathlib import Path
 
-from PySide6.QtCore import QRectF, QSize, Qt, Signal
-from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPainterPath, QPen, QPixmap
+from PySide6.QtCore import QRectF, QSize, Qt, QTimer, Signal
+from PySide6.QtGui import QColor, QHideEvent, QImage, QMouseEvent, QPainter, QPainterPath, QPen, QPixmap, QShowEvent
 from PySide6.QtWidgets import QWidget
 
 from oledhero.display import Display, DisplayManagerProtocol
 from oledhero.gui.theme import BORDER_COLOR, MUTED_TEXT_COLOR, PANEL_COLOR, PRIMARY_TEXT_COLOR
+from oledhero.screen_capture import ScreenshotProvider
 
 
 class DisplaySelector(QWidget):
@@ -22,8 +23,15 @@ class DisplaySelector(QWidget):
     _DISPLAY_GAP = 3.0
     _CORNER_RADIUS = 7.0
     _SELECTED_BORDER_COLOR = "#2589ff"
+    _PREVIEW_INTERVAL_MS = 2_000
 
-    def __init__(self, display_manager: DisplayManagerProtocol, parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        display_manager: DisplayManagerProtocol,
+        parent: QWidget | None = None,
+        *,
+        screenshot_provider: ScreenshotProvider | None = None,
+    ) -> None:
         super().__init__(parent)
         self.setObjectName("displaySelector")
         self.setMouseTracking(True)
@@ -33,6 +41,13 @@ class DisplaySelector(QWidget):
         self._displays: dict[str, Display] = {}
         self._display_rects: dict[str, QRectF] = {}
         self._selected_display_id: str | None = None
+        self._previews: dict[str, QImage] = {}
+
+        self._screenshot_provider = screenshot_provider
+        self._preview_timer = QTimer(self)
+        self._preview_timer.setInterval(self._PREVIEW_INTERVAL_MS)
+        self._preview_timer.setTimerType(Qt.TimerType.CoarseTimer)
+        self._preview_timer.timeout.connect(self.refresh_previews)
 
         logo_path = Path(__file__).parent.parent / "assets" / "OledHero.svg"
         self._background_logo = QPixmap(str(logo_path))
@@ -51,6 +66,47 @@ class DisplaySelector(QWidget):
         if self._displays and self._selected_display_id not in self._displays:
             self._selected_display_id = next(iter(self._displays.keys()))
 
+        self.update()
+
+    def refresh_previews(self) -> None:
+        if not self.isVisible() or not self._displays or not self._screenshot_provider:
+            return
+        screenshots = self._screenshot_provider.request_screenshots()
+
+        if len(screenshots) != len(self._displays.keys()):
+            # There is some display/ screenshot mismatch
+            return
+
+        # scale the images to rectangle pixel size so we dont need to store the whole img in ram
+        preview_rects = self._layout_displays(
+            QRectF(self.rect()).adjusted(
+                self._DISPLAY_MARGIN,
+                self._DISPLAY_MARGIN,
+                -self._DISPLAY_MARGIN,
+                -self._DISPLAY_MARGIN,
+            )
+        )
+        device_pixel_ratio = self.devicePixelRatioF()
+        
+        previews: dict[str, QImage] = {}
+        for display in self._displays.values():
+            image = screenshots[display.qt_idx].image
+            if image.isNull():
+                continue
+
+            target_rect = preview_rects[display.id]
+            target_size = QSize(
+                max(1, round(target_rect.width() * device_pixel_ratio)),
+                max(1, round(target_rect.height() * device_pixel_ratio)),
+            )
+            image = image.scaled(
+                target_size,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+            previews[display.id] = image
+
+        self._previews = previews
         self.update()
 
     def paintEvent(self, event) -> None:
@@ -163,12 +219,16 @@ class DisplaySelector(QWidget):
         painter.setClipPath(display_path)
         painter.fillPath(display_path, QColor(PANEL_COLOR))
 
-        painter.setPen(QColor(MUTED_TEXT_COLOR))
-        number_font = painter.font()
-        number_font.setPixelSize(max(18, min(56, round(rect.height() * 0.35))))
-        number_font.setBold(True)
-        painter.setFont(number_font)
-        painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, str(display_number))
+        preview = self._previews.get(display.id)
+        if preview is not None:
+            painter.drawImage(rect, preview)
+        else:
+            painter.setPen(QColor(MUTED_TEXT_COLOR))
+            number_font = painter.font()
+            number_font.setPixelSize(max(18, min(56, round(rect.height() * 0.35))))
+            number_font.setBold(True)
+            painter.setFont(number_font)
+            painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, str(display_number))
 
         strip_height = min(40.0, max(26.0, rect.height() * 0.20))
         strip = QRectF(rect.left(), rect.bottom() - strip_height, rect.width(), strip_height)
@@ -222,6 +282,17 @@ class DisplaySelector(QWidget):
         painter.setPen(QColor(PRIMARY_TEXT_COLOR))
         painter.drawText(caption_rect, Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft, caption)
         painter.restore()
+
+    def showEvent(self, event: QShowEvent) -> None:
+        # start screenshot provider
+        super().showEvent(event)
+        self._preview_timer.start()
+        QTimer.singleShot(0, self.refresh_previews)
+
+    def hideEvent(self, event: QHideEvent) -> None:
+        # stop screenshot provider - save CPU usage
+        self._preview_timer.stop()
+        super().hideEvent(event)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         # check if user clicked on a display to select it
