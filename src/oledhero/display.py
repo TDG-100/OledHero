@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Protocol
 
+from PySide6.QtGui import QImage
 from slugify import slugify
 
 
@@ -48,13 +49,34 @@ class DisplayMetadata:
         return slugify("_".join(parts), allow_unicode=True, lowercase=True)
 
 
+class Screen(Protocol):
+    """Screen containing metadata and other functionality to serve as a QScreen abstraction layer."""
+
+    @property
+    def metadata(self) -> DisplayMetadata:
+        """Return screen metadata."""
+
+    def grab_image(self) -> QImage:
+        """Capture and return a raw screenshot image."""
+
+
 @dataclass(frozen=True)
 class Display:
-    id: str
-    name: str
-    metadata: DisplayMetadata
+    screen: Screen
     brightness: int | None
     compatible: bool
+
+    @property
+    def id(self) -> str:
+        return self.metadata.identity
+
+    @property
+    def name(self) -> str:
+        return self.metadata.edid_name or self.metadata.name or "Display"
+
+    @property
+    def metadata(self) -> DisplayMetadata:
+        return self.screen.metadata
 
     def __str__(self) -> str:
         brightness = f"{self.brightness}%" if self.brightness is not None else "-"
