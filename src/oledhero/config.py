@@ -31,7 +31,7 @@ def load_default_config() -> AppConfig:
 def load_config(path: Path) -> AppConfig:
     values = tomllib.loads(path.read_text(encoding="utf-8"))
     return AppConfig(
-        idle_seconds=_int_value(values, "screen_preview_rate_millis", DEFAULT_SCREEN_PREVIEW_RATE_MILLISECONDS, min_val=(1/30)*1000),
+        idle_seconds=_int_value(values, "screen_preview_rate_millis", DEFAULT_SCREEN_PREVIEW_RATE_MILLISECONDS, min_val=(1 / 30) * 1000),
     )
 
 

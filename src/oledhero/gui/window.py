@@ -1,10 +1,11 @@
 import sys
 from pathlib import Path
 
-from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QApplication, QHBoxLayout, QLabel, QMainWindow, QStatusBar, QVBoxLayout, QWidget
+from PySide6.QtCore import QSize, QUrl
+from PySide6.QtGui import QDesktopServices, QIcon
+from PySide6.QtWidgets import QApplication, QHBoxLayout, QLabel, QMainWindow, QStatusBar, QToolButton, QVBoxLayout, QWidget
 
-from oledhero.config import AppConfig
+from oledhero.config import AppConfig, default_config_path
 from oledhero.display import DisplayManagerProtocol
 from oledhero.display_controller.monitorcontrol_controller import MonitorControlProvider
 from oledhero.displaymanager import DisplayManager
@@ -21,6 +22,26 @@ class GlobalActions(QWidget):
         super().__init__(parent)
         self.setObjectName("globalActions")
         self.setMinimumWidth(260)
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addStretch()
+
+        settings_icon_path = Path(__file__).parent.parent / "assets" / "settings.svg"
+        self._open_config_directory_button = QToolButton(self)
+        self._open_config_directory_button.setObjectName("openConfigDirectoryButton")
+        self._open_config_directory_button.setIcon(QIcon(str(settings_icon_path)))
+        self._open_config_directory_button.setIconSize(QSize(20, 20))
+        self._open_config_directory_button.setFixedSize(36, 36)
+        self._open_config_directory_button.setToolTip("Open configuration folder")
+        self._open_config_directory_button.setAccessibleName("Open configuration folder")
+        self._open_config_directory_button.clicked.connect(self._open_config_directory)
+        layout.addWidget(self._open_config_directory_button)
+
+    def _open_config_directory(self) -> None:
+        config_directory = default_config_path().parent
+        config_directory.mkdir(parents=True, exist_ok=True)
+        QDesktopServices.openUrl(QUrl.fromLocalFile(str(config_directory)))
 
 
 class AppStatusBar(QStatusBar):
