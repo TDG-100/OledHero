@@ -40,9 +40,9 @@ def _int_value(values: Mapping[str, object], key: str, default: int, min_val: in
     if not isinstance(value, int):
         raise TypeError(f"{key} must be an integer")
     if min_val is not None and value < min_val:
-        raise ValueError(f"{key} must be > {min_val}")
-    if max_val is not None and value < max_val:
-        raise ValueError(f"{key} must be < {max_val}")
+        raise ValueError(f"{key} must be >= {min_val}")
+    if max_val is not None and value > max_val:
+        raise ValueError(f"{key} must be <= {max_val}")
     return value
 
 
@@ -51,7 +51,7 @@ def _float_value(values: Mapping[str, object], key: str, default: float, min_val
     if not isinstance(value, int | float):
         raise TypeError(f"{key} must be a number")
     if min_val is not None and value < min_val:
-        raise ValueError(f"{key} must be > {min_val}")
-    if max_val is not None and value < max_val:
-        raise ValueError(f"{key} must be < {max_val}")
+        raise ValueError(f"{key} must be >= {min_val}")
+    if max_val is not None and value > max_val:
+        raise ValueError(f"{key} must be <= {max_val}")
     return float(value)

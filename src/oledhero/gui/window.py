@@ -4,6 +4,7 @@ from pathlib import Path
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QHBoxLayout, QLabel, QMainWindow, QStatusBar, QVBoxLayout, QWidget
 
+from oledhero.config import AppConfig
 from oledhero.display import DisplayManagerProtocol
 from oledhero.display_controller.monitorcontrol_controller import MonitorControlProvider
 from oledhero.displaymanager import DisplayManager
@@ -32,12 +33,14 @@ class AppStatusBar(QStatusBar):
 class MainWindow(QMainWindow):
     def __init__(
         self,
+        config: AppConfig,
         display_manager: DisplayManagerProtocol | None = None,
         screenshot_provider: ScreenshotProvider | None = None,
     ) -> None:
         super().__init__()
         self.setWindowTitle("OledHero")
         self.setFixedSize(1400, 880)
+        self._config = config
         self._display_manager = display_manager or DisplayManager(
             MonitorControlProvider(),
             PySide6ScreenProvider(),
@@ -76,6 +79,7 @@ class MainWindow(QMainWindow):
             self._display_manager,
             central_widget,
             screenshot_provider=self._screenshot_provider,
+            config=self._config,
         )
         display_settings = DisplaySettings(central_widget, display_selector.selected_display)
         display_selector.displaySelected.connect(display_settings.set_display)
@@ -88,8 +92,8 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(APP_STYLESHEET)
 
 
-def main(argv: list[str] | None = None) -> int:
+def main(argv: list[str] | None = None, *, config: AppConfig) -> int:
     application = QApplication.instance() or QApplication(argv if argv is not None else sys.argv)
-    window = MainWindow()
+    window = MainWindow(config)
     window.show()
     return application.exec()
