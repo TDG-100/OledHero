@@ -5,7 +5,6 @@ from oledhero.gui.widgets.toggle_switch import ToggleSwitch
 
 
 class DisplaySettings(QFrame):
-
     def __init__(self, parent: QWidget | None = None, display: Display | None = None) -> None:
         super().__init__(parent)
         self.setObjectName("displaySettings")
@@ -48,7 +47,7 @@ class DisplaySettings(QFrame):
             self._enabled_toggle.setEnabled(False)
             self._enabled_toggle.setToolTip("")
             return
-        
+
         self._title.setText(display.name or "Display")
         self._resolution.setText(f"{display.metadata.geometry.width} × {display.metadata.geometry.height}")
         self._enabled_toggle.setChecked(display.compatible)

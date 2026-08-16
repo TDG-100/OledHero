@@ -6,12 +6,12 @@ from PySide6.QtWidgets import QApplication, QHBoxLayout, QLabel, QMainWindow, QS
 
 from oledhero.display import DisplayManagerProtocol
 from oledhero.display_controller.monitorcontrol_controller import MonitorControlProvider
-from oledhero.display_metadata.pyside6_metadata import PySide6MetadataProvider
 from oledhero.displaymanager import DisplayManager
 from oledhero.gui.display_selector import DisplaySelector
 from oledhero.gui.display_settings import DisplaySettings
 from oledhero.gui.theme import APP_STYLESHEET
-from oledhero.screen_capture import PySide6ScreenCapture
+from oledhero.screen_capture import DirectScreenshotProvider, ScreenshotProvider
+from oledhero.screen_discovery import PySide6ScreenProvider
 from oledhero.version import __version__
 
 
@@ -30,15 +30,19 @@ class AppStatusBar(QStatusBar):
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, display_manager: DisplayManagerProtocol | None = None) -> None:
+    def __init__(
+        self,
+        display_manager: DisplayManagerProtocol | None = None,
+        screenshot_provider: ScreenshotProvider | None = None,
+    ) -> None:
         super().__init__()
         self.setWindowTitle("OledHero")
         self.setFixedSize(1400, 880)
         self._display_manager = display_manager or DisplayManager(
             MonitorControlProvider(),
-            PySide6MetadataProvider(),
+            PySide6ScreenProvider(),
         )
-        self._screen_capture = PySide6ScreenCapture()
+        self._screenshot_provider = screenshot_provider or DirectScreenshotProvider()
 
         icon_path = Path(__file__).parent.parent / "assets" / "OledHero.ico"
         self.setWindowIcon(QIcon(str(icon_path)))
@@ -71,7 +75,7 @@ class MainWindow(QMainWindow):
         display_selector = DisplaySelector(
             self._display_manager,
             central_widget,
-            screenshot_provider=self._screen_capture,
+            screenshot_provider=self._screenshot_provider,
         )
         display_settings = DisplaySettings(central_widget, display_selector.selected_display)
         display_selector.displaySelected.connect(display_settings.set_display)

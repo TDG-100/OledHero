@@ -30,7 +30,7 @@ class DisplaySelector(QWidget):
         display_manager: DisplayManagerProtocol,
         parent: QWidget | None = None,
         *,
-        screenshot_provider: ScreenshotProvider | None = None,
+        screenshot_provider: ScreenshotProvider,
     ) -> None:
         super().__init__(parent)
         self.setObjectName("displaySelector")
@@ -69,12 +69,7 @@ class DisplaySelector(QWidget):
         self.update()
 
     def refresh_previews(self) -> None:
-        if not self.isVisible() or not self._displays or not self._screenshot_provider:
-            return
-        screenshots = self._screenshot_provider.request_screenshots()
-
-        if len(screenshots) != len(self._displays.keys()):
-            # There is some display/ screenshot mismatch
+        if not self.isVisible() or not self._displays:
             return
 
         # scale the images to rectangle pixel size so we dont need to store the whole img in ram
@@ -87,12 +82,13 @@ class DisplaySelector(QWidget):
             )
         )
         device_pixel_ratio = self.devicePixelRatioF()
-        
+
         previews: dict[str, QImage] = {}
         for display in self._displays.values():
-            image = screenshots[display.qt_idx].image
-            if image.isNull():
+            screenshot = self._screenshot_provider.get_screenshot(display)
+            if screenshot is None:
                 continue
+            image = screenshot.image
 
             target_rect = preview_rects[display.id]
             target_size = QSize(

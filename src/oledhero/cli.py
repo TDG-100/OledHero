@@ -92,22 +92,22 @@ def _cmd_brightness(args: argparse.Namespace) -> str:
 
 
 def _cmd_metadata(args: argparse.Namespace) -> str:
-    from oledhero.display_metadata.pyside6_metadata import PySide6MetadataProvider
+    from oledhero.screen_discovery import PySide6ScreenProvider
 
-    metadata = PySide6MetadataProvider().list_display_metadata()
-    return "\n\n".join(f"Display {index}\n{display}" 
-                       for index, display in enumerate(metadata, start=1)
+    screens = PySide6ScreenProvider().list_screens()
+    return "\n\n".join(f"Display {index}\n{screen.metadata}"
+                       for index, screen in enumerate(screens, start=1)
                        )  # fmt: skip
 
 
 def _cmd_displays(args: argparse.Namespace) -> str:
     from oledhero.display_controller.monitorcontrol_controller import MonitorControlProvider
-    from oledhero.display_metadata.pyside6_metadata import PySide6MetadataProvider
     from oledhero.displaymanager import DisplayManager
+    from oledhero.screen_discovery import PySide6ScreenProvider
 
     displays = DisplayManager(
         MonitorControlProvider(),
-        PySide6MetadataProvider(),
+        PySide6ScreenProvider(),
     ).list_displays()
 
     return "\n\n".join(f"Display {index}\n{display}" for index, display in enumerate(displays, start=1))
