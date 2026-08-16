@@ -1,20 +1,24 @@
-import tomllib
-from collections.abc import Mapping
-from dataclasses import dataclass
 from pathlib import Path
 
 from platformdirs import user_config_dir
-
-DEFAULT_SCREEN_PREVIEW_RATE_MILLISECONDS = 2000
+from pydantic import BaseModel, ConfigDict, Field
 
 CONFIG_APP_NAME = "oled_hero"
 CONFIG_DIR = Path(user_config_dir(CONFIG_APP_NAME, roaming=False))
-CONFIG_PATH = CONFIG_DIR / "config.toml"
+CONFIG_PATH = CONFIG_DIR / "config.json"
 
 
-@dataclass(frozen=True)
-class AppConfig:
-    screen_preview_rate_millis: int = DEFAULT_SCREEN_PREVIEW_RATE_MILLISECONDS
+class ConfigModel(BaseModel):
+    model_config = ConfigDict(strict=True, extra="ignore")
+
+
+class DisplayConfig(ConfigModel):
+    brightness_default_value: int = Field(default=100, ge=0, le=100)
+
+
+class AppConfig(ConfigModel):
+    screen_preview_rate_millis: int = Field(default=2000, ge=(1 / 30) * 1000)
+    displays: dict[str, DisplayConfig] = Field(default_factory=dict)
 
 
 def default_config_path() -> Path:
@@ -29,29 +33,13 @@ def load_default_config() -> AppConfig:
 
 
 def load_config(path: Path) -> AppConfig:
-    values = tomllib.loads(path.read_text(encoding="utf-8"))
-    return AppConfig(
-        idle_seconds=_int_value(values, "screen_preview_rate_millis", DEFAULT_SCREEN_PREVIEW_RATE_MILLISECONDS, min_val=(1 / 30) * 1000),
-    )
+    return AppConfig.model_validate_json(path.read_text(encoding="utf-8"))
 
 
-def _int_value(values: Mapping[str, object], key: str, default: int, min_val: int | None, max_val: int | None) -> int:
-    value = values.get(key, default)
-    if not isinstance(value, int):
-        raise TypeError(f"{key} must be an integer")
-    if min_val is not None and value < min_val:
-        raise ValueError(f"{key} must be >= {min_val}")
-    if max_val is not None and value > max_val:
-        raise ValueError(f"{key} must be <= {max_val}")
-    return value
+def save_default_config(config: AppConfig) -> None:
+    save_config(default_config_path(), config)
 
 
-def _float_value(values: Mapping[str, object], key: str, default: float, min_val: float | None, max_val: float | None) -> float:
-    value = values.get(key, default)
-    if not isinstance(value, int | float):
-        raise TypeError(f"{key} must be a number")
-    if min_val is not None and value < min_val:
-        raise ValueError(f"{key} must be >= {min_val}")
-    if max_val is not None and value > max_val:
-        raise ValueError(f"{key} must be <= {max_val}")
-    return float(value)
+def save_config(path: Path, config: AppConfig) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(f"{config.model_dump_json(indent=2)}\n", encoding="utf-8", newline="\n")
