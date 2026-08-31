@@ -16,6 +16,18 @@ QLabel#title {{
 QLabel#version {{
     color: {MUTED_TEXT_COLOR};
 }}
+QToolButton#openConfigDirectoryButton {{
+    background: {PANEL_COLOR};
+    border: 1px solid {BORDER_COLOR};
+    border-radius: 7px;
+}}
+QToolButton#openConfigDirectoryButton:hover {{
+    background: #353535;
+    border-color: #505050;
+}}
+QToolButton#openConfigDirectoryButton:pressed {{
+    background: #242424;
+}}
 QFrame#displaySettings {{
     background: {PANEL_COLOR};
     border: 1px solid {BORDER_COLOR};
@@ -27,6 +39,22 @@ QLabel#displaySettingsTitle {{
 }}
 QLabel#displaySettingsValue {{
     color: {MUTED_TEXT_COLOR};
+}}
+QSpinBox#percentageSpinBox {{
+    min-width: 44px;
+    min-height: 24px;
+    padding: 0;
+    color: {PRIMARY_TEXT_COLOR};
+    background: transparent;
+    border: none;
+}}
+QSpinBox#percentageSpinBox:hover:enabled {{
+    background: #454545;
+    border-radius: 4px;
+}}
+QSpinBox#percentageSpinBox:disabled {{
+    color: {MUTED_TEXT_COLOR};
+    background: transparent;
 }}
 QStatusBar#statusBar {{
     background: {BACKGROUND_COLOR};

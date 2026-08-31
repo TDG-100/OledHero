@@ -11,9 +11,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     handler = getattr(args, "handler", None)
     if handler is None:
-        from oledhero.gui import main as gui_main
-
-        return gui_main(["oledhero"])
+        handler = _cmd_gui
 
     try:
         output = handler(args)

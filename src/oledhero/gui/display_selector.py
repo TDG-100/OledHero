@@ -4,6 +4,7 @@ from PySide6.QtCore import QRectF, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QHideEvent, QImage, QMouseEvent, QPainter, QPainterPath, QPen, QPixmap, QShowEvent
 from PySide6.QtWidgets import QWidget
 
+from oledhero.config import app_config
 from oledhero.display import Display, DisplayManagerProtocol
 from oledhero.gui.theme import BORDER_COLOR, MUTED_TEXT_COLOR, PANEL_COLOR, PRIMARY_TEXT_COLOR
 from oledhero.screen_capture import ScreenshotProvider
@@ -23,7 +24,6 @@ class DisplaySelector(QWidget):
     _DISPLAY_GAP = 3.0
     _CORNER_RADIUS = 7.0
     _SELECTED_BORDER_COLOR = "#2589ff"
-    _PREVIEW_INTERVAL_MS = 2_000
 
     def __init__(
         self,
@@ -45,7 +45,7 @@ class DisplaySelector(QWidget):
 
         self._screenshot_provider = screenshot_provider
         self._preview_timer = QTimer(self)
-        self._preview_timer.setInterval(self._PREVIEW_INTERVAL_MS)
+        self._preview_timer.setInterval(app_config.screen_preview_rate_millis)
         self._preview_timer.setTimerType(Qt.TimerType.CoarseTimer)
         self._preview_timer.timeout.connect(self.refresh_previews)
 

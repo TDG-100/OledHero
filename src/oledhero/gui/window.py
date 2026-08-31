@@ -1,9 +1,11 @@
 import sys
 from pathlib import Path
 
-from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QApplication, QHBoxLayout, QLabel, QMainWindow, QStatusBar, QVBoxLayout, QWidget
+from PySide6.QtCore import QSize, QUrl
+from PySide6.QtGui import QDesktopServices, QIcon
+from PySide6.QtWidgets import QApplication, QHBoxLayout, QLabel, QMainWindow, QStatusBar, QToolButton, QVBoxLayout, QWidget
 
+from oledhero.config import CONFIG_DIR
 from oledhero.display import DisplayManagerProtocol
 from oledhero.display_controller.monitorcontrol_controller import MonitorControlProvider
 from oledhero.displaymanager import DisplayManager
@@ -20,6 +22,25 @@ class GlobalActions(QWidget):
         super().__init__(parent)
         self.setObjectName("globalActions")
         self.setMinimumWidth(260)
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addStretch()
+
+        settings_icon_path = Path(__file__).parent.parent / "assets" / "settings.svg"
+        self._open_config_directory_button = QToolButton(self)
+        self._open_config_directory_button.setObjectName("openConfigDirectoryButton")
+        self._open_config_directory_button.setIcon(QIcon(str(settings_icon_path)))
+        self._open_config_directory_button.setIconSize(QSize(20, 20))
+        self._open_config_directory_button.setFixedSize(36, 36)
+        self._open_config_directory_button.setToolTip("Open configuration folder")
+        self._open_config_directory_button.setAccessibleName("Open configuration folder")
+        self._open_config_directory_button.clicked.connect(self._open_config_directory)
+        layout.addWidget(self._open_config_directory_button)
+
+    def _open_config_directory(self) -> None:
+        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+        QDesktopServices.openUrl(QUrl.fromLocalFile(str(CONFIG_DIR)))
 
 
 class AppStatusBar(QStatusBar):
@@ -77,7 +98,11 @@ class MainWindow(QMainWindow):
             central_widget,
             screenshot_provider=self._screenshot_provider,
         )
-        display_settings = DisplaySettings(central_widget, display_selector.selected_display)
+        display_settings = DisplaySettings(
+            central_widget,
+            display_selector.selected_display,
+            display_manager=self._display_manager,
+        )
         display_selector.displaySelected.connect(display_settings.set_display)
         body.addWidget(display_selector, 1)
         body.addWidget(display_settings)
