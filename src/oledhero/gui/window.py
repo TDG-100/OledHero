@@ -5,7 +5,7 @@ from PySide6.QtCore import QSize, QUrl
 from PySide6.QtGui import QDesktopServices, QIcon
 from PySide6.QtWidgets import QApplication, QHBoxLayout, QLabel, QMainWindow, QStatusBar, QToolButton, QVBoxLayout, QWidget
 
-from oledhero.config import AppConfig, default_config_path
+from oledhero.config import CONFIG_DIR
 from oledhero.display import DisplayManagerProtocol
 from oledhero.display_controller.monitorcontrol_controller import MonitorControlProvider
 from oledhero.displaymanager import DisplayManager
@@ -39,9 +39,8 @@ class GlobalActions(QWidget):
         layout.addWidget(self._open_config_directory_button)
 
     def _open_config_directory(self) -> None:
-        config_directory = default_config_path().parent
-        config_directory.mkdir(parents=True, exist_ok=True)
-        QDesktopServices.openUrl(QUrl.fromLocalFile(str(config_directory)))
+        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+        QDesktopServices.openUrl(QUrl.fromLocalFile(str(CONFIG_DIR)))
 
 
 class AppStatusBar(QStatusBar):
@@ -54,14 +53,12 @@ class AppStatusBar(QStatusBar):
 class MainWindow(QMainWindow):
     def __init__(
         self,
-        config: AppConfig,
         display_manager: DisplayManagerProtocol | None = None,
         screenshot_provider: ScreenshotProvider | None = None,
     ) -> None:
         super().__init__()
         self.setWindowTitle("OledHero")
         self.setFixedSize(1400, 880)
-        self._config = config
         self._display_manager = display_manager or DisplayManager(
             MonitorControlProvider(),
             PySide6ScreenProvider(),
@@ -100,9 +97,12 @@ class MainWindow(QMainWindow):
             self._display_manager,
             central_widget,
             screenshot_provider=self._screenshot_provider,
-            config=self._config,
         )
-        display_settings = DisplaySettings(central_widget, display_selector.selected_display)
+        display_settings = DisplaySettings(
+            central_widget,
+            display_selector.selected_display,
+            display_manager=self._display_manager,
+        )
         display_selector.displaySelected.connect(display_settings.set_display)
         body.addWidget(display_selector, 1)
         body.addWidget(display_settings)
@@ -113,8 +113,8 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(APP_STYLESHEET)
 
 
-def main(argv: list[str] | None = None, *, config: AppConfig) -> int:
+def main(argv: list[str] | None = None) -> int:
     application = QApplication.instance() or QApplication(argv if argv is not None else sys.argv)
-    window = MainWindow(config)
+    window = MainWindow()
     window.show()
     return application.exec()

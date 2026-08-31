@@ -60,11 +60,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _cmd_gui(args: argparse.Namespace) -> int:
-    from oledhero.config import load_default_config
     from oledhero.gui import main as gui_main
 
-    config = load_default_config()
-    return gui_main(["oledhero"], config=config)
+    return gui_main(["oledhero"])
 
 
 def _cmd_version(args: argparse.Namespace) -> str:

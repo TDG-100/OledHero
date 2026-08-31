@@ -40,6 +40,22 @@ QLabel#displaySettingsTitle {{
 QLabel#displaySettingsValue {{
     color: {MUTED_TEXT_COLOR};
 }}
+QSpinBox#percentageSpinBox {{
+    min-width: 44px;
+    min-height: 24px;
+    padding: 0;
+    color: {PRIMARY_TEXT_COLOR};
+    background: transparent;
+    border: none;
+}}
+QSpinBox#percentageSpinBox:hover:enabled {{
+    background: #454545;
+    border-radius: 4px;
+}}
+QSpinBox#percentageSpinBox:disabled {{
+    color: {MUTED_TEXT_COLOR};
+    background: transparent;
+}}
 QStatusBar#statusBar {{
     background: {BACKGROUND_COLOR};
     border-top: 1px solid {PANEL_COLOR};
